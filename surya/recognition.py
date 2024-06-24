@@ -60,7 +60,7 @@ def batch_recognition(images: List, languages: List[List[str]], model, processor
 
     processed_batches = processor(text=[""] * len(images), images=images, lang=languages)
 
-    for i in tqdm(range(0, len(images), batch_size), desc="Recognizing Text"):
+    for i in range(0, len(images), batch_size):
         batch_langs = languages[i:i+batch_size]
         has_math = ["_math" in lang for lang in batch_langs]
 

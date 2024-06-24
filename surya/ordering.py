@@ -41,7 +41,7 @@ def batch_ordering(images: List, bboxes: List[List[List[float]]], model: OrderVi
     images = [image.convert("RGB") for image in images] # also copies the images
 
     output_order = []
-    for i in tqdm(range(0, len(images), batch_size), desc="Finding reading order"):
+    for i in range(0, len(images), batch_size):
         batch_bboxes = deepcopy(bboxes[i:i+batch_size])
         batch_images = images[i:i+batch_size]
         orig_sizes = [image.size for image in batch_images]

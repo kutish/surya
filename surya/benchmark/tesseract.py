@@ -74,7 +74,7 @@ def tesseract_parallel(imgs):
     tess_parallel = max(tess_parallel_cores // 4, 1)
 
     with ProcessPoolExecutor(max_workers=tess_parallel) as executor:
-        tess_bboxes = tqdm(executor.map(tesseract_bboxes, imgs), total=len(imgs), desc="Running tesseract bbox detection")
+        tess_bboxes = executor.map(tesseract_bboxes, imgs)
         tess_bboxes = list(tess_bboxes)
     return tess_bboxes
 
