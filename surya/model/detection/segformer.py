@@ -188,9 +188,9 @@ class SegformerEfficientSelfAttention(nn.Module):
 
         # Take the dot product between "query" and "key" to get the raw attention scores.
         attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
-        del key_layer, query_layer
+        del key_layer, query_layer, hidden_states
         gc.collect()
-        attention_scores = attention_scores / math.sqrt(self.attention_head_size)
+        attention_scores /= math.sqrt(self.attention_head_size)
 
         # Normalize the attention scores to probabilities.
         attention_probs = nn.functional.softmax(attention_scores, dim=-1)
