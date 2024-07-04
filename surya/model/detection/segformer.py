@@ -184,16 +184,13 @@ class SegformerEfficientSelfAttention(nn.Module):
             hidden_states = self.layer_norm(hidden_states)
 
         key_layer = self.transpose_for_scores(self.key(hidden_states))
-        value_layer = self.transpose_for_scores(self.value(hidden_states))
 
         # Take the dot product between "query" and "key" to get the raw attention scores.
-        attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
-
-        attention_scores = attention_scores / math.sqrt(self.attention_head_size)
+        attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2)) / math.sqrt(self.attention_head_size)
 
         # Normalize the attention scores to probabilities.
         attention_probs = nn.functional.softmax(attention_scores, dim=-1)
-
+        value_layer = self.transpose_for_scores(self.value(hidden_states))
         context_layer = torch.matmul(attention_probs, value_layer)
 
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
