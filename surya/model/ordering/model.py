@@ -30,5 +30,4 @@ def load_model(checkpoint=settings.ORDER_MODEL_CHECKPOINT, device=settings.TORCH
 
     model = model.to(device)
     model = model.eval()
-    print(f"Loaded reading order model {checkpoint} on device {device} with dtype {dtype}")
     return model
