@@ -182,13 +182,15 @@ class SegformerEfficientSelfAttention(nn.Module):
             # Reshape back to (batch_size, seq_len, num_channels)
             hidden_states = hidden_states.reshape(batch_size, num_channels, -1).permute(0, 2, 1)
             hidden_states = self.layer_norm(hidden_states)
+            del batch_size, seq_len, num_channels
+            gc.collect()
 
         key_layer = self.transpose_for_scores(self.key(hidden_states))
         value_layer = self.transpose_for_scores(self.value(hidden_states))
 
         # Take the dot product between "query" and "key" to get the raw attention scores.
         attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
-        del key_layer, query_layer, hidden_states, batch_size, seq_len, num_channels
+        del key_layer, query_layer, hidden_states
         gc.collect()
         attention_scores /= math.sqrt(self.attention_head_size)
 
