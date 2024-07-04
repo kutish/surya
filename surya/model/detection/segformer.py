@@ -425,14 +425,12 @@ class SegformerModel(SegformerPreTrainedModel):
         output_hidden_states: Optional[bool] = None,
         return_dict: Optional[bool] = None,
     ) -> Union[Tuple, BaseModelOutput]:
-        encoder_outputs = self.encoder(
+        return self.encoder(
             pixel_values,
             output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
         )
-        del pixel_values, output_attentions, output_hidden_states, return_dict
-        return encoder_outputs
 
 class SegformerForRegressionMask(SegformerForSemanticSegmentation):
     def __init__(self, config):
