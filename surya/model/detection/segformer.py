@@ -26,6 +26,7 @@ def load_model(checkpoint=settings.DETECTOR_MODEL_CHECKPOINT, device=settings.TO
         print("Warning: MPS may have poor results. This is a bug with MPS, see here - https://github.com/pytorch/pytorch/issues/84936")
     model = model.to(device)
     model = model.eval()
+    print(f"Loaded detection model {checkpoint} on device {device} with dtype {dtype}")
     return model
 
 
@@ -170,6 +171,8 @@ class SegformerEfficientSelfAttention(nn.Module):
         width,
         output_attentions=False,
     ):
+        query_layer = self.transpose_for_scores(self.query(hidden_states))
+
         if self.sr_ratio > 1:
             batch_size, seq_len, num_channels = hidden_states.shape
             # Reshape to (batch_size, num_channels, height, width)
@@ -179,20 +182,18 @@ class SegformerEfficientSelfAttention(nn.Module):
             # Reshape back to (batch_size, seq_len, num_channels)
             hidden_states = hidden_states.reshape(batch_size, num_channels, -1).permute(0, 2, 1)
             hidden_states = self.layer_norm(hidden_states)
-            del batch_size, seq_len, num_channels
-            gc.collect()
 
         key_layer = self.transpose_for_scores(self.key(hidden_states))
-        query_layer = self.transpose_for_scores(self.query(hidden_states))
+        value_layer = self.transpose_for_scores(self.value(hidden_states))
+
         # Take the dot product between "query" and "key" to get the raw attention scores.
         attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
-        del key_layer, query_layer
-        gc.collect()
-        attention_scores /= math.sqrt(self.attention_head_size)
+
+        attention_scores = attention_scores / math.sqrt(self.attention_head_size)
 
         # Normalize the attention scores to probabilities.
         attention_probs = nn.functional.softmax(attention_scores, dim=-1)
-        value_layer = self.transpose_for_scores(self.value(hidden_states))
+
         context_layer = torch.matmul(attention_probs, value_layer)
 
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
@@ -425,15 +426,16 @@ class SegformerModel(SegformerPreTrainedModel):
         output_hidden_states: Optional[bool] = None,
         return_dict: Optional[bool] = None,
     ) -> Union[Tuple, BaseModelOutput]:
-        return self.encoder(
+        encoder_outputs = self.encoder(
             pixel_values,
             output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
         )
+        return encoder_outputs
 
 class SegformerForRegressionMask(SegformerForSemanticSegmentation):
-    def __init__(self, config):
+    def __init__(self, config, **kwargs):
         super().__init__(config)
         self.segformer = SegformerModel(config)
         self.decode_head = SegformerForMaskDecodeHead(config)
@@ -444,6 +446,7 @@ class SegformerForRegressionMask(SegformerForSemanticSegmentation):
     def forward(
         self,
         pixel_values: torch.FloatTensor,
+        **kwargs
     ) -> Union[Tuple, SemanticSegmenterOutput]:
 
         encoder_hidden_states = self.segformer(
