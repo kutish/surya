@@ -454,12 +454,9 @@ class SegformerForRegressionMask(SegformerForSemanticSegmentation):
         )
 
         logits = self.decode_head(encoder_hidden_states)
-        del encoder_hidden_states
-        gc.collect()
         # Apply sigmoid to get 0-1 output
         sigmoid_logits = torch.special.expit(logits)
-        del logits
-        gc.collect()
+
         return SemanticSegmenterOutput(
             loss=None,
             logits=sigmoid_logits,
