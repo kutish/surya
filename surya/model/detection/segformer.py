@@ -26,7 +26,6 @@ def load_model(checkpoint=settings.DETECTOR_MODEL_CHECKPOINT, device=settings.TO
         print("Warning: MPS may have poor results. This is a bug with MPS, see here - https://github.com/pytorch/pytorch/issues/84936")
     model = model.to(device)
     model = model.eval()
-    print(f"Loaded detection model {checkpoint} on device {device} with dtype {dtype}")
     return model
 
 
@@ -186,7 +185,8 @@ class SegformerEfficientSelfAttention(nn.Module):
         key_layer = self.transpose_for_scores(self.key(hidden_states))
 
         # Take the dot product between "query" and "key" to get the raw attention scores.
-        attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2)) / math.sqrt(self.attention_head_size)
+        attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
+        attention_scores /= math.sqrt(self.attention_head_size)
 
         # Normalize the attention scores to probabilities.
         attention_probs = nn.functional.softmax(attention_scores, dim=-1)
