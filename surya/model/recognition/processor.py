@@ -33,13 +33,12 @@ class SuryaImageProcessor(DonutImageProcessor):
     def numpy_resize(cls, image: np.ndarray, size, interpolation=cv2.INTER_LANCZOS4):
         height, width = image.shape[:2]
         max_width, max_height = size["width"], size["height"]
-        print(f'{height=}, {width=}, {max_width=}, {max_height=}')
 
         if (height == max_height and width <= max_width) or (width == max_width and height <= max_height):
             image = image.transpose(2, 0, 1)
             return image
 
-        scale = min(max_width / width, max_height / height)
+        scale = min(max_width / max(width, 1), max_height / max(height, 1))
 
         new_width = int(width * scale)
         new_height = int(height * scale)
